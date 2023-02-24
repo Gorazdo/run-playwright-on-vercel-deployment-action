@@ -1,0 +1,42 @@
+name: "Playwright e2e Test"
+description: "Runs playwright"
+
+inputs:
+  baseUrl:
+    description: "Playwright will run test against this URL"
+    required: true
+  playwrightReportPath:
+    description: "Playwright report output path"
+    required: true
+    default: "./playwright-report"
+  playwrightInstall:
+    description: "npx playwright install ..."
+    required: true
+    default: "chromium --with-deps"
+  installCommand:
+    description: "yarn install --frozen-lockfile or npm ci"
+    required: true
+    default: "yarn install --frozen-lockfile"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+    - name: Install dependencies
+      run: ${{ inputs.installCommand }}
+      shell: bash
+    - name: Install Playwright Browsers
+      run: npx playwright install ${{ inputs.playwrightInstall }}
+      shell: bash
+    - name: Run Playwright tests
+      run: PLAYWRIGHT_BASE_URL=${{ inputs.baseUrl }} npx playwright test
+      shell: bash
+    - uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: playwright-report
+        path: ${{ inputs.playwrightReportPath }}
+        retention-days: 30
