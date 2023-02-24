@@ -9,14 +9,18 @@ inputs:
     description: "Playwright report output path"
     required: true
     default: "./playwright-report"
-  playwrightInstall:
-    description: "npx playwright install ..."
+  installPlaywrightCommand:
+    description: "npx playwright install <flags-and-options>"
     required: true
-    default: "chromium --with-deps"
-  installCommand:
-    description: "yarn install --frozen-lockfile or npm ci"
+    default: "npx playwright install chromium --with-deps"
+  installDependenciesCommand:
+    description: "npm ci | yarn install --frozen-lockfile | pnpm i --frozen-lockfile"
     required: true
     default: "yarn install --frozen-lockfile"
+  testPlaywrightCommand:
+    description: "npx playwright test <flags-and-options>"
+    required: true
+    default: "npx playwright test"
 
 runs:
   using: "composite"
@@ -26,13 +30,13 @@ runs:
       with:
         node-version: 18
     - name: Install dependencies
-      run: ${{ inputs.installCommand }}
+      run: ${{ inputs.installDependenciesCommand }}
       shell: bash
     - name: Install Playwright Browsers
-      run: npx playwright install ${{ inputs.playwrightInstall }}
+      run: ${{ inputs.installPlaywrightCommand }}
       shell: bash
     - name: Run Playwright tests
-      run: PLAYWRIGHT_BASE_URL=${{ inputs.baseUrl }} npx playwright test
+      run: PLAYWRIGHT_BASE_URL=${{ inputs.baseUrl }} ${{ inputs.testPlaywrightCommand }}
       shell: bash
     - uses: actions/upload-artifact@v3
       if: always()
